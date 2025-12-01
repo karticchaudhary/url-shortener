@@ -1,6 +1,10 @@
 package com.learning.url_shortener.models.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -8,6 +12,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "urls")
+@Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UrlEntity {
 
     @Id
@@ -22,12 +30,23 @@ public class UrlEntity {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "access_count")
-    private Long accessCount = 0L;
+    private long accessCount = 0L;
+
+    @PrePersist
+    private void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PostPersist
+    private void postPersist() {
+        updatedAt = LocalDateTime.now();
+    }
 }
