@@ -17,7 +17,9 @@ public class UrlService {
     public UrlResponseDto createShortUrl(String url) {
         String shortUrl = CommonUtils.getShortUrl(url);
         urlRepository.findByShortUrl(shortUrl)
-                .orElseThrow(() -> new CustomDbException("URl already exist!!"));
+                .ifPresent(u -> {
+                    throw new CustomDbException("URl already exist!!");
+                });
 
         UrlEntity savedEntity = urlRepository.save(
                 UrlEntity.builder()
