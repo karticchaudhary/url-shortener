@@ -6,7 +6,10 @@ import com.learning.url_shortener.models.entity.UrlEntity;
 import com.learning.url_shortener.repository.UrlRepository;
 import com.learning.url_shortener.utils.CommonUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @AllArgsConstructor
@@ -16,6 +19,7 @@ public class UrlService {
 
     public UrlResponseDto createShortUrl(String url) {
         String shortUrl = CommonUtils.getShortUrl(url);
+
         urlRepository.findByShortUrl(shortUrl)
                 .ifPresent(u -> {
                     throw new CustomDbException("URl already exist!!");
@@ -30,20 +34,40 @@ public class UrlService {
         return CommonUtils.convertToDto(savedEntity);
     }
 
-    public UrlResponseDto getShortUrl(String shortUrl) {
-        return urlRepository.findByShortUrl(shortUrl)
-                .map(UrlResponseDto::fromEntity)
-                .orElseThrow(() -> new CustomDbException("URl already exist!!"));
+    public UrlResponseDto getResponseDtoFromShortUrl(String shortUrl) {
+        UrlEntity urlEntity = findShortUrlOrThrow(shortUrl);
+        updateStats(urlEntity);
+        return CommonUtils.convertToDto(urlEntity);
+    }
+
+    private UrlEntity findShortUrlOrThrow(String shortUrl) {
+        Optional<UrlEntity> urlEntity = urlRepository.findByShortUrl(shortUrl);
+        if (urlEntity.isPresent())
+            return urlEntity.get();
+
+        throw new CustomDbException("URL doesn't exist!!");
     }
 
     public void deleteShortUrl(String shortUrl) {
+        final UrlEntity urlEntity = findShortUrlOrThrow(shortUrl);
+        urlRepository.delete(urlEntity);
     }
 
     public UrlResponseDto updateShortUrl(String shortUrl) {
-        return null;
+        final UrlEntity urlEntity = findShortUrlOrThrow(shortUrl);
+        urlEntity.setShortUrl(shortUrl);
+        final UrlEntity savedEntity = urlRepository.save(urlEntity);
+        return CommonUtils.convertToDto(savedEntity);
     }
 
-    public UrlResponseDto getShortUrlStats(String shortUrl) {
-        return null;
+    public Long getShortUrlStats(String shortUrl) {
+        final UrlEntity urlEntity = findShortUrlOrThrow(shortUrl);
+        return urlEntity.getAccessCount();
+    }
+
+    @Async
+    public void updateStats(UrlEntity urlEntity) {
+        urlEntity.setAccessCount(urlEntity.getAccessCount() + 1);
+        urlRepository.save(urlEntity);
     }
 }

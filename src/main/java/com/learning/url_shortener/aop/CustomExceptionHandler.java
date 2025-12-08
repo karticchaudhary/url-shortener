@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class CustomExceptionHandler {
 
     @ExceptionHandler(CustomDbException.class)
-    public ResponseEntity<ErrorMessageDto> Exception(CustomDbException exception) {
-        return new ResponseEntity<>(new ErrorMessageDto(HttpStatus.CONFLICT.value(), exception.getMessage()), HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorMessageDto> customDbException(CustomDbException exception) {
+        return new ResponseEntity<>(new ErrorMessageDto(HttpStatus.CONFLICT.value(),
+                exception.getMessage()), HttpStatus.CONFLICT);
     }
 
 //    @ExceptionHandler(Exception.class)
@@ -27,6 +28,6 @@ public class CustomExceptionHandler {
         // return new ResponseEntity<>(error, HttpStatus.CONFLICT);
 
         // CORRECT: It should be 500
-        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(null, HttpStatus.NOT_IMPLEMENTED);
     }
 }
